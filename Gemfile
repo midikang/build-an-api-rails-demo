@@ -51,3 +51,5 @@ end
 # and scaleable authorization system.
 # Read more: https://github.com/elabs/pundit
 gem 'pundit'
+
+gem 'kaminari'

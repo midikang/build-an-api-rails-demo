@@ -321,3 +321,38 @@ end
 建立 Micropost 模型
 
 $ bundle exe rails g model Micropost
+
+
+namespace :data do
+  task :create_microposts => [:environment] do
+    user = User.find(1)
+    100.times do |i|
+      Micropost.create(user_id: user.id, title: "This is the title-#{i}", content: "This is the content-#{i}")
+    end
+  end
+end
+
+```
+rake data:create_microposts
+```
+
+## Api::V1::MicropostsController
+```
+rails g controller api/v1/microposts --no-assets
+```
+
+
+
+```
+$ rake routes
+           Prefix Verb   URI Pattern                                Controller#Action
+     api_v1_users GET    /api/v1/users(.:format)                    api/v1/users#index
+                  POST   /api/v1/users(.:format)                    api/v1/users#create
+      api_v1_user GET    /api/v1/users/:id(.:format)                api/v1/users#show
+                  PATCH  /api/v1/users/:id(.:format)                api/v1/users#update
+                  PUT    /api/v1/users/:id(.:format)                api/v1/users#update
+                  DELETE /api/v1/users/:id(.:format)                api/v1/users#destroy
+  api_v1_sessions POST   /api/v1/sessions(.:format)                 api/v1/sessions#create
+api_v1_microposts GET    /api/v1/user/:user_id/microposts(.:format) api/v1/microposts#index
+```
+
