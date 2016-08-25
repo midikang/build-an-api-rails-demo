@@ -199,3 +199,86 @@ Connection: Keep-Alive
 
 curl -i -X POST -d "user[email]=test-user-00@mail.com&user[password]=1" http://localhost:8080/api/v1/sessions.json
 
+HTTP/1.1 401 Unauthorized
+X-Frame-Options: SAMEORIGIN
+X-Xss-Protection: 1; mode=block
+X-Content-Type-Options: nosniff
+Content-Type: text/plain; charset=utf-8
+Cache-Control: no-cache
+X-Request-Id: 8b501e02-8845-4a02-93ed-4b6ff005f874
+X-Runtime: 0.083789
+Server: WEBrick/1.3.1 (Ruby/2.3.0/2015-12-25)
+Date: Wed, 24 Aug 2016 09:12:51 GMT
+Content-Length: 0
+Connection: Keep-Alive
+
+
+
+## Authenticate User
+
+首先在 Api::V1::BaseController 里实现 authenticate_user! 方法:
+
+app/controllers/api/v1/base_controller.rb,
+
+class Api::V1::BaseController < ApplicationController
+
++  def authenticate_user!
++    token, options = ActionController::HttpAuthentication::Token.token_and_options(request)
+
++    user_email = options.blank?? nil : options[:email]
++    user = user_email && User.find_by(email: user_email)
+
++    if user && ActiveSupport::SecurityUtils.secure_compare(user.authentication_token, token)
++      self.current_user = user
++    else
++      return unauthenticated!
++    end
++  end
+
+end
+
+我们构造一个测试用例, 这个测试用例包括以下一些步骤:
+
+用户登录成功, 服务端返回其 email, token 等数据
+用户请求 API 更新其 name, 用户发送的 token 合法, 更新成功
+用户请求 API 更新其 name, 用户发送的 token 非法, 更新失败
+
+
+curl -i -X POST -d "user[email]=test-user-00@mail.com&user[password]=123123" https://rails5-midikang.c9users.io:8080/api/v1/sessions.json
+HTTP/1.1 200 OK
+x-xss-protection: 1; mode=block
+x-content-type-options: nosniff
+content-type: application/json; charset=utf-8
+etag: W/"db83ee8e656e00f6a17dcbba3e6e6114"
+cache-control: max-age=0, private, must-revalidate
+x-request-id: febe45dc-68d4-480b-9463-aea16b05fd86
+x-runtime: 0.083588
+server: WEBrick/1.3.1 (Ruby/2.3.0/2015-12-25)
+date: Thu, 25 Aug 2016 03:52:05 GMT
+content-length: 155
+X-BACKEND: apps-proxy
+
+{"session":{"id":1,"name":"test-user-00","admin":false,"token":"WK0fsNBA2mj/ZmHxMuCkM52qnLTpFOsAAFSGOlXvskETuu0al+atQAUSuYDSY1Mpsvc3mQE1QoGbWesf1MvmtA=="}}
+
+
+
+=================
+$ curl -i -X PUT -d "user[name]=midikang-user" \
+>   --header "Authorization: Token token=WK0fsNBA2mj/ZmHxMuCkM52qnLTpFOsAAFSGOlXvskETuu0al+atQAUSuYDSY1Mpsvc3mQE1QoGbWesf1MvmtA==, \
+>   email=test-user-00@mail.com" \
+>   http://localhost:8080//api/v1/users/1
+HTTP/1.1 200 OK
+X-Frame-Options: SAMEORIGIN
+X-Xss-Protection: 1; mode=block
+X-Content-Type-Options: nosniff
+Content-Type: application/json; charset=utf-8
+Etag: W/"b5c690436ed9dea6657b402a7fc8a009"
+Cache-Control: max-age=0, private, must-revalidate
+X-Request-Id: e1b9c448-660c-46c1-b3f9-723c033e714b
+X-Runtime: 0.081411
+Server: WEBrick/1.3.1 (Ruby/2.3.0/2015-12-25)
+Date: Thu, 25 Aug 2016 03:54:42 GMT
+Content-Length: 40
+Connection: Keep-Alive
+
+{"user":{"id":1,"name":"midikang-user"}}
