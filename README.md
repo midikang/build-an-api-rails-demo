@@ -282,3 +282,22 @@ Content-Length: 40
 Connection: Keep-Alive
 
 {"user":{"id":1,"name":"midikang-user"}}
+
+
+## 增加授权(Authorization)
+
+上面的测试有个问题，就是当前登录的用户可以把其他用户的 name 更新，这个应该是不被允许的，所以我们
+还需要增加一个权限认证的机制。在这里我们使用 Pundit 来
+实现权限认证。
+
+安装 pundit
+
+Gemfile,
+
++ gem 'pundit'
+$ bundle install
+app/controllers/api/v1/base_controller.rb,
+
+class Api::V1::BaseController < ApplicationController
+  + include Pundit
+end

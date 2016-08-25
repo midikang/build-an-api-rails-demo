@@ -45,3 +45,9 @@ group :development do
   gem 'spring'
 end
 
+# add by Midi
+# Pundit provides a set of helpers which guide you in leveraging regular
+# Ruby classes and object oriented design patterns to build a simple, robust
+# and scaleable authorization system.
+# Read more: https://github.com/elabs/pundit
+gem 'pundit'
