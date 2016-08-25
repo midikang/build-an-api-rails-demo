@@ -301,3 +301,18 @@ app/controllers/api/v1/base_controller.rb,
 class Api::V1::BaseController < ApplicationController
   + include Pundit
 end
+
+rails g pundit:install
+Running via Spring preloader in process 31036
+      create  app/policies/application_policy.rb
+
+将 policies 目录放到 rails 的自动加载路径中:
+
+config/application.rb,
+
+module BuildAnApiRailsDemo
+  class Application < Rails::Application
++    config.autoload_paths << Rails.root.join('app/policies')
+  end
+end
+

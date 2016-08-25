@@ -1,4 +1,6 @@
 class Api::V1::BaseController < ApplicationController
+  include Pundit
+
   # disable the CSRF token
   protect_from_forgery with: :null_session
 
