@@ -29,3 +29,173 @@ ruby 2.3.0p0 (2015-12-25 revision 53290) [x86_64-linux]
 
 Please feel free to use a different markup language if you do not plan to run
 <tt>rake doc:app</tt>.
+
+
+# Midi's steps
+
+加入第一个 API resource
+
+BaseController
+$ bundle exe rails g controller api/v1/base --no-assets
+
+class Api::V1::BaseController < ApplicationController
+  # disable the CSRF token
+  protect_from_forgery with: :null_session
+
+  # disable cookies (no set-cookies header in response)
+  before_action :destroy_session
+
+  # disable the CSRF token
+  skip_before_action :verify_authenticity_token
+
+  def destroy_session
+    request.session_options[:skip] = true
+  end
+end
+
+
+配置路由:
+
+config/routes.rb,
+
+namespace :api do
+  namespace :v1 do
+    resources :users, only: [:index, :create, :show, :update, :destroy]
+    # 原文有 microposts, 我们现在把它注释掉
+    # resources :microposts, only: [:index, :create, :show, :update, :destroy]
+  end
+end
+
+生成控制器 Api::V1::UsersController
+$ bundle exe rails g controller api/v1/users --no-assets
+class Api::V1::UsersController < Api::V1::BaseController
+  def show
+    @user = User.find(params[:id])
+  end
+end
+
+app/views/api/v1/users/show.json.jbuilder
+
+json.user do
+  json.(@user, :id, :email, :name, :activated, :admin, :created_at, :updated_at)
+end
+
+User 模型和 users 表
+rails g model User  email name activated:datetime admin:boolean
+
+t.boolean :admin, default: false
+
+数据迁移:
+
+$ bundle exe rake db:migrate
+
+种子数据:
+
+db/seeds.rb,
+
+users = User.create([
+  {
+    email: 'test-user-00@mail.com',
+    name: 'test-user-00',
+    activated: DateTime.now,
+    admin: false
+  },
+  {
+    email: 'test-user-01@mail.com',
+    name: 'test-user-01',
+    activated: DateTime.now,
+    admin: false
+  }
+  ])
+
+
+
+$ rake routes
+      Prefix Verb   URI Pattern                 Controller#Action
+api_v1_users GET    /api/v1/users(.:format)     api/v1/users#index
+             POST   /api/v1/users(.:format)     api/v1/users#create
+ api_v1_user GET    /api/v1/users/:id(.:format) api/v1/users#show
+             PATCH  /api/v1/users/:id(.:format) api/v1/users#update
+             PUT    /api/v1/users/:id(.:format) api/v1/users#update
+             DELETE /api/v1/users/:id(.:format) api/v1/users#destroy
+
+
+curl -i http://localhost:8080/api/v1/users/1.json
+
+```
+curl -i http://localhost:8080/api/v1/users/1.json
+HTTP/1.1 200 OK
+X-Frame-Options: SAMEORIGIN
+X-Xss-Protection: 1; mode=block
+X-Content-Type-Options: nosniff
+Content-Type: application/json; charset=utf-8
+Etag: W/"26a73698c493062550be9967b03e9dfc"
+Cache-Control: max-age=0, private, must-revalidate
+X-Request-Id: c316110a-bee8-4224-9b24-497cfb29e2ea
+X-Runtime: 0.902682
+Server: WEBrick/1.3.1 (Ruby/2.3.0/2015-12-25)
+Date: Wed, 24 Aug 2016 08:33:53 GMT
+Content-Length: 204
+Connection: Keep-Alive
+{"user":{"id":1,"email":"test-user-00@mail.com","name":"test-user-00","activated":"2016-08-24T08:19:49.546Z","admin":false,"created_at":"2016-08-24T08:19:49.566Z","updated_at":"2016-08-24T08:19:49.566Z"}}
+```
+
+
+rails g migration add_authentication_token_to_users
+
+class User < ActiveRecord::Base
+  before_create :generate_authentication_token
+
+  def generate_authentication_token
+    loop do
+      self.authentication_token  = SecureRandom.base64(64)
+      break if !User.find_by(authentication_token: authentication_token)
+    end
+  end
+
+  def reset_auth_token!
+    generate_authentication_token
+    save
+  end
+end
+
+rails g controller api/v1/sessions --no-assets
+
+
+
+rails g migration add_password_digest_to_users
+
+给数据库中已存在的测试用户增加密码和 authentication token
+
+这个任务可以在 rails console 下完成,
+
+首先启动 rails console,
+
+$ bundle exe rails c
+然后在 rails console 里执行,
+
+User.all.each {|user|
+  user.password = '123123'
+  user.reset_auth_token!
+}
+
+
+curl -i -X POST -d "user[email]=test-user-00@mail.com&user[password]=123123" http://localhost:8080/api/v1/sessions.json
+HTTP/1.1 200 OK
+X-Frame-Options: SAMEORIGIN
+X-Xss-Protection: 1; mode=block
+X-Content-Type-Options: nosniff
+Content-Type: application/json; charset=utf-8
+Etag: W/"db83ee8e656e00f6a17dcbba3e6e6114"
+Cache-Control: max-age=0, private, must-revalidate
+X-Request-Id: ceed1cad-0d5a-4f0c-b49a-5dadab1c7bad
+X-Runtime: 0.924739
+Server: WEBrick/1.3.1 (Ruby/2.3.0/2015-12-25)
+Date: Wed, 24 Aug 2016 09:05:44 GMT
+Content-Length: 155
+Connection: Keep-Alive
+
+{"session":{"id":1,"name":"test-user-00","admin":false,"token":"WK0fsNBA2mj/ZmHxMuCkM52qnLTpFOsAAFSGOlXvskETuu0al+atQAUSuYDSY1Mpsvc3mQE1QoGbWesf1MvmtA=="}}
+
+curl -i -X POST -d "user[email]=test-user-00@mail.com&user[password]=1" http://localhost:8080/api/v1/sessions.json
+
