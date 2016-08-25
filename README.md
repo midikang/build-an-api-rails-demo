@@ -316,3 +316,8 @@ module BuildAnApiRailsDemo
   end
 end
 
+
+# 分页
+建立 Micropost 模型
+
+$ bundle exe rails g model Micropost
