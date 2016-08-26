@@ -1,7 +1,7 @@
 require File.expand_path('../boot', __FILE__)
 
 require 'rails/all'
-
+require 'rack/redis_throttle' # rate limit
 # Require the gems listed in Gemfile, including any gems
 # you've limited to :test, :development, or :production.
 Bundler.require(*Rails.groups)
@@ -27,5 +27,7 @@ module BuildAnApiRailsDemo
     # add support for pundit authorization
     config.autoload_paths << Rails.root.join('app/policies')
 
+    # rate limit
+    config.middleware.use Rack::RedisThrottle::Daily, max: 3
   end
 end

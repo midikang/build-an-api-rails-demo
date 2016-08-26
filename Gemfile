@@ -53,3 +53,6 @@ end
 gem 'pundit'
 
 gem 'kaminari'
+
+# rate limit
+gem 'redis-throttle', git: 'git://github.com/andreareginato/redis-throttle.git'

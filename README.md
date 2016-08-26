@@ -15,6 +15,9 @@ ruby 2.3.0p0 (2015-12-25 revision 53290) [x86_64-linux]
     [pundit](https://github.com/elabs/pundit)
   * paginate
     [kaminari]()
+  * Rate limit
+    [redis-throttle](https://github.com/andreareginato/redis-throttle.git)
+
 * Configuration
 
 * Database creation
@@ -359,3 +362,12 @@ $ rake routes
 api_v1_microposts GET    /api/v1/user/:user_id/microposts(.:format) api/v1/microposts#index
 ```
 
+
+
+API 调用频率限制(Rate Limit)
+
+我们使用 redis-throttle 来实现这个功能。
+
+Gemfile,
+
+gem 'redis-throttle', git: 'git://github.com/andreareginato/redis-throttle.git'
