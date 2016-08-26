@@ -17,6 +17,8 @@ ruby 2.3.0p0 (2015-12-25 revision 53290) [x86_64-linux]
     [kaminari]()
   * Rate limit
     [redis-throttle](https://github.com/andreareginato/redis-throttle.git)
+  * CORS 是 Cross Origin Resource Sharing 的缩写。简单地说 CORS 可以允许其他域名的网页通过 AJAX 请求你的 API。
+    gem 'rack-cors'
 
 * Configuration
 

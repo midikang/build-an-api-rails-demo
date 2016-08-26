@@ -29,5 +29,14 @@ module BuildAnApiRailsDemo
 
     # rate limit
     config.middleware.use Rack::RedisThrottle::Daily, max: 3
+
+    # cors
+    config.middleware.insert_before 0, "Rack::Cors" do
+      allow do
+        orgins '*'
+        resources '*', :headers => :any, :methods => [:get, :post, :put, :patch, :delete, :options, :head]
+      end
+    end
+    end
   end
 end
